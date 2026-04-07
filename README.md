@@ -35,6 +35,9 @@ The objective of this test is to implement several backend functionalities for m
 
    - Implement the endpoint to generate a report of orders for each product in the last 12 months, grouped by month, year, and state.
 
+
+   GET http://localhost:3000/api/orders/report
+
 5. **Search Orders**:
 
    - Implement an endpoint to search for users who have placed specific orders. There are several filters that can be applied in this endpoint:

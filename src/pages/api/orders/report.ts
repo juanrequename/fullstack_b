@@ -14,7 +14,7 @@ const REPORT_QUERY = `
   LEFT JOIN state_history sh ON sh.order_id = o.order_id AND sh.current_state = true
   LEFT JOIN states s ON s.state_id = sh.state_id
   WHERE o.order_date >= NOW() - INTERVAL '12 months'
-  GROUP BY p.product_id, p.model, year, month, s.state_name
+  GROUP BY p.product_id, p.model, EXTRACT(YEAR FROM o.order_date), EXTRACT(MONTH FROM o.order_date), s.state_name
   ORDER BY year DESC, month DESC, p.model, s.state_name
 `;
 
