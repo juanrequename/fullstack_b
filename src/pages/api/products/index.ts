@@ -1,4 +1,5 @@
 import { getDBConnection } from "@/database/database";
+import { METHOD, RESPONSE_CODES } from "@/types/api";
 import { NextApiRequest, NextApiResponse } from "next";
 
 interface Album {
@@ -15,19 +16,19 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
-  if (req.method !== "POST") {
-    return res.status(405).json({ error: "Method not allowed" });
+  if (req.method !== METHOD.POST) {
+    return res.status(RESPONSE_CODES.METHOD_NOT_ALLOWED).json({ error: "Method not allowed" });
   }
 
   const { model, description, year, gears, tags } = req.body;
 
   if (!model || !description || !year || !gears) {
-    return res.status(400).json({ error: "Missing required fields: model, description, year, gears" });
+    return res.status(RESPONSE_CODES.BAD_REQUEST).json({ error: "Missing required fields: model, description, year, gears" });
   }
 
   const isValid = await validateDescription(description);
   if (!isValid) {
-    return res.status(400).json({
+    return res.status(RESPONSE_CODES.BAD_REQUEST).json({
       error: "Description does not match any album title from the external source",
     });
   }
@@ -64,11 +65,11 @@ export default async function handler(
     }
 
     await client.query("COMMIT");
-    res.status(201).json({ product_id: productId, model, description, year: Number(year), gears: Number(gears), tags });
+    res.status(RESPONSE_CODES.CREATED).json({ product_id: productId, model, description, year: Number(year), gears: Number(gears), tags });
   } catch (error) {
     await client.query("ROLLBACK");
     console.error("Error creating product:", error);
-    res.status(500).json({ error: "Internal Server Error" });
+    res.status(RESPONSE_CODES.INTERNAL_SERVER_ERROR).json({ error: "Internal Server Error" });
   } finally {
     client.release();
   }

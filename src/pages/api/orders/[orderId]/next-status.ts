@@ -1,4 +1,5 @@
 import { getDBConnection } from "@/database/database";
+import { METHOD, RESPONSE_CODES } from "@/types/api";
 import { NextApiRequest, NextApiResponse } from "next";
 
 const STATUS_PROGRESSION: Record<string, string> = {
@@ -10,13 +11,13 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
-  if (req.method !== "PATCH") {
-    return res.status(405).json({ error: "Method not allowed" });
+  if (req.method !== METHOD.PATCH) {
+    return res.status(RESPONSE_CODES.METHOD_NOT_ALLOWED).json({ error: "Method not allowed" });
   }
 
   const orderId = Number(req.query.orderId);
   if (isNaN(orderId)) {
-    return res.status(400).json({ error: "Invalid order ID" });
+    return res.status(RESPONSE_CODES.BAD_REQUEST).json({ error: "Invalid order ID" });
   }
 
   const pool = getDBConnection();
@@ -34,7 +35,7 @@ export default async function handler(
 
     if (currentResult.rows.length === 0) {
       await client.query("ROLLBACK");
-      return res.status(404).json({ error: "Order not found or has no current state" });
+      return res.status(RESPONSE_CODES.NOT_FOUND).json({ error: "Order not found or has no current state" });
     }
 
     const currentState = currentResult.rows[0].state_name;
@@ -42,13 +43,19 @@ export default async function handler(
 
     if (!nextState) {
       await client.query("ROLLBACK");
-      return res.status(400).json({ error: `Cannot advance from status: ${currentState}` });
+      return res.status(RESPONSE_CODES.BAD_REQUEST).json({ error: `Cannot advance from status: ${currentState}` });
     }
 
     const nextStateResult = await client.query(
       "SELECT state_id FROM states WHERE state_name = $1",
       [nextState]
     );
+
+    if (nextStateResult.rows.length === 0) {
+      await client.query("ROLLBACK");
+      return res.status(RESPONSE_CODES.INTERNAL_SERVER_ERROR).json({ error: `State '${nextState}' not found in database` });
+    }
+
     const nextStateId = nextStateResult.rows[0].state_id;
 
     await client.query(
@@ -62,11 +69,11 @@ export default async function handler(
     );
 
     await client.query("COMMIT");
-    res.status(200).json({ order_id: orderId, new_status: nextState });
+    res.status(RESPONSE_CODES.OK).json({ order_id: orderId, new_status: nextState });
   } catch (error) {
     await client.query("ROLLBACK");
     console.error("Error updating order status:", error);
-    res.status(500).json({ error: "Internal Server Error" });
+    res.status(RESPONSE_CODES.INTERNAL_SERVER_ERROR).json({ error: "Internal Server Error" });
   } finally {
     client.release();
   }

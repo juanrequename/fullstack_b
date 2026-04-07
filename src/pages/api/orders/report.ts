@@ -1,4 +1,5 @@
 import { getDBConnection } from "@/database/database";
+import { METHOD, RESPONSE_CODES } from "@/types/api";
 import { NextApiRequest, NextApiResponse } from "next";
 
 const REPORT_QUERY = `
@@ -22,18 +23,18 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
-  if (req.method !== "GET") {
-    return res.status(405).json({ error: "Method not allowed" });
+  if (req.method !== METHOD.GET) {
+    return res.status(RESPONSE_CODES.METHOD_NOT_ALLOWED).json({ error: "Method not allowed" });
   }
 
   const pool = getDBConnection();
   const client = await pool.connect();
   try {
     const result = await client.query(REPORT_QUERY);
-    res.status(200).json(result.rows);
+    res.status(RESPONSE_CODES.OK).json(result.rows);
   } catch (error) {
     console.error("Error generating report:", error);
-    res.status(500).json({ error: "Internal Server Error" });
+    res.status(RESPONSE_CODES.INTERNAL_SERVER_ERROR).json({ error: "Internal Server Error" });
   } finally {
     client.release();
   }

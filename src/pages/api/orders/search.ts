@@ -1,13 +1,14 @@
 import { getDBConnection } from "@/database/database";
 import { ORDERS_BASE_QUERY, ORDERS_GROUP_ORDER } from "@/database/queries";
+import { METHOD, RESPONSE_CODES } from "@/types/api";
 import { NextApiRequest, NextApiResponse } from "next";
 
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
-  if (req.method !== "GET") {
-    return res.status(405).json({ error: "Method not allowed" });
+  if (req.method !== METHOD.GET) {
+    return res.status(RESPONSE_CODES.METHOD_NOT_ALLOWED).json({ error: "Method not allowed" });
   }
 
   const { model, description, tags, startDate, endDate, gears } = req.query;
@@ -63,10 +64,10 @@ export default async function handler(
   const client = await pool.connect();
   try {
     const result = await client.query(query, params);
-    res.status(200).json(result.rows);
+    res.status(RESPONSE_CODES.OK).json(result.rows);
   } catch (error) {
     console.error("Error searching orders:", error);
-    res.status(500).json({ error: "Internal Server Error" });
+    res.status(RESPONSE_CODES.INTERNAL_SERVER_ERROR).json({ error: "Internal Server Error" });
   } finally {
     client.release();
   }

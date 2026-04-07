@@ -1,6 +1,7 @@
 export enum METHOD {
   GET = "GET",
   POST = "POST",
+  PATCH = "PATCH",
   DELETE = "DELETE",
 }
 
@@ -20,6 +21,7 @@ export const RESPONSE_CODES = {
   UNAUTHORIZED: 401,
   FORBIDDEN: 403,
   NOT_FOUND: 404,
+  METHOD_NOT_ALLOWED: 405,
   INTERNAL_SERVER_ERROR: 500,
 } as const;
 
