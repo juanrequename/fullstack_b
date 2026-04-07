@@ -1,0 +1,27 @@
+services:
+  postgres:
+    image: postgres:17
+    ports:
+      - '5432:5432'
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: backend
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+  # postgres:
+  #   image: postgres:latest
+  #   container_name: postgres-db
+  #   environment:
+  #     POSTGRES_USER: admin
+  #     POSTGRES_PASSWORD: password
+  #     POSTGRES_DB: database
+  #   ports:
+  #     - "5555:5432"
+  #   volumes:
+  #     - postgres-data:/var/lib/postgresql/data
+  #     - ./init-db:/docker-entrypoint-initdb.d
+
+volumes:
+  postgres_data:
