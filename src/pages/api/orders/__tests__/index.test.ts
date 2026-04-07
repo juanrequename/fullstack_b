@@ -73,4 +73,14 @@ describe("GET /api/orders", () => {
     expect(res.status).toHaveBeenCalledWith(405);
     expect(res.json).toHaveBeenCalledWith({ error: "Method not allowed" });
   });
+
+  it("should return 200 with empty array when no orders exist", async () => {
+    mockQuery.mockResolvedValueOnce({ rows: [] });
+
+    await handler(req as NextApiRequest, res as NextApiResponse);
+
+    expect(res.status).toHaveBeenCalledWith(200);
+    expect(res.json).toHaveBeenCalledWith([]);
+    expect(mockRelease).toHaveBeenCalled();
+  });
 });

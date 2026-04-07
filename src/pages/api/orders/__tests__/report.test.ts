@@ -58,4 +58,14 @@ describe("GET /api/orders/report", () => {
     expect(res.status).toHaveBeenCalledWith(500);
     expect(mockRelease).toHaveBeenCalled();
   });
+
+  it("should return 200 with empty array when no report data exists", async () => {
+    mockQuery.mockResolvedValueOnce({ rows: [] });
+
+    await handler(req as NextApiRequest, res as NextApiResponse);
+
+    expect(res.status).toHaveBeenCalledWith(200);
+    expect(res.json).toHaveBeenCalledWith([]);
+    expect(mockRelease).toHaveBeenCalled();
+  });
 });

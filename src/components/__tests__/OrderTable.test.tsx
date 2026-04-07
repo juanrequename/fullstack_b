@@ -150,4 +150,131 @@ describe('OrderTable', () => {
       expect(screen.getByText('Description does not match')).toBeInTheDocument();
     });
   });
+
+  it('shows loading spinner while fetching orders', () => {
+    mockedAxios.get.mockReturnValue(new Promise(() => {}));
+    renderComponent();
+    expect(screen.getByRole('progressbar')).toBeInTheDocument();
+  });
+
+  it('shows error alert when fetching orders fails', async () => {
+    mockedAxios.get.mockRejectedValue(new Error('Network error'));
+    renderComponent();
+    await waitFor(() => {
+      expect(screen.getByText('Error loading cars')).toBeInTheDocument();
+    });
+  });
+
+  it('disables Next Step button for Cancelled orders', async () => {
+    mockedAxios.get.mockResolvedValue({
+      data: [
+        { order_id: 3, user: 'Bob', model: 'AMG', tags: [], order_date: '2025-01-01T00:00:00.000Z', current_status_date: '2025-01-02T00:00:00.000Z', status: 'Cancelled' },
+      ],
+    });
+    renderComponent();
+    await waitFor(() => screen.getByText('Bob'));
+    expect(screen.getByText('Next Step')).toBeDisabled();
+  });
+
+  it('adds and displays a tag in the dialog', async () => {
+    renderComponent();
+    await waitFor(() => screen.getByText('Add new Car'));
+    fireEvent.click(screen.getByText('Add new Car'));
+
+    fireEvent.change(screen.getByLabelText('Tags'), { target: { value: 'Luxury' } });
+    fireEvent.click(screen.getByText('Add Tag'));
+
+    expect(screen.getByText('Luxury')).toBeInTheDocument();
+  });
+
+  it('removes a tag when delete icon is clicked', async () => {
+    renderComponent();
+    await waitFor(() => screen.getByText('Add new Car'));
+    fireEvent.click(screen.getByText('Add new Car'));
+
+    fireEvent.change(screen.getByLabelText('Tags'), { target: { value: 'Luxury' } });
+    fireEvent.click(screen.getByText('Add Tag'));
+    expect(screen.getByText('Luxury')).toBeInTheDocument();
+
+    const chip = screen.getByText('Luxury').closest('.MuiChip-root');
+    const deleteButton = chip!.querySelector('[data-testid="CloseIcon"]')!;
+    fireEvent.click(deleteButton);
+
+    expect(screen.queryByText('Luxury')).not.toBeInTheDocument();
+  });
+
+  it('closes the dialog when Cancel is clicked', async () => {
+    renderComponent();
+    await waitFor(() => screen.getByText('Add new Car'));
+    fireEvent.click(screen.getByText('Add new Car'));
+    expect(screen.getByText('Add New Car')).toBeInTheDocument();
+
+    const dialogButtons = screen.getAllByText('Cancel');
+    const dialogCancel = dialogButtons.find(
+      (btn) => btn.closest('.MuiDialogActions-root')
+    )!;
+    fireEvent.click(dialogCancel);
+
+    await waitFor(() => {
+      expect(screen.queryByText('Add New Car')).not.toBeInTheDocument();
+    });
+  });
+
+  it('displays generic error when non-axios error occurs', async () => {
+    mockedAxios.post.mockRejectedValue(new Error('unknown'));
+    (axios.isAxiosError as unknown as jest.Mock) = jest.fn().mockReturnValue(false);
+
+    renderComponent();
+    await waitFor(() => screen.getByText('Add new Car'));
+
+    fireEvent.click(screen.getByText('Add new Car'));
+    fireEvent.change(screen.getByLabelText('Model'), { target: { value: 'X' } });
+    fireEvent.change(screen.getByLabelText('Description'), { target: { value: 'x' } });
+    fireEvent.change(screen.getByLabelText('Year'), { target: { value: '2021' } });
+    fireEvent.change(screen.getByLabelText('Gears'), { target: { value: '6' } });
+
+    fireEvent.click(screen.getByText('Add Car'));
+
+    await waitFor(() => {
+      expect(screen.getByText('Failed to add product')).toBeInTheDocument();
+    });
+  });
+
+  it('renders orders with empty tags array', async () => {
+    mockedAxios.get.mockResolvedValue({
+      data: [
+        { order_id: 5, user: 'Alice', model: 'EQS', tags: [], order_date: '2025-03-01T00:00:00.000Z', current_status_date: '2025-03-02T00:00:00.000Z', status: 'Pending' },
+      ],
+    });
+    renderComponent();
+    await waitFor(() => screen.getByText('Alice'));
+    expect(screen.getByText('EQS')).toBeInTheDocument();
+  });
+
+  it('submits form with tags included in the request', async () => {
+    mockedAxios.post.mockResolvedValue({ data: { product_id: 100 } });
+    renderComponent();
+    await waitFor(() => screen.getByText('Add new Car'));
+    fireEvent.click(screen.getByText('Add new Car'));
+
+    fireEvent.change(screen.getByLabelText('Model'), { target: { value: 'AMG' } });
+    fireEvent.change(screen.getByLabelText('Description'), { target: { value: 'desc' } });
+    fireEvent.change(screen.getByLabelText('Year'), { target: { value: '2023' } });
+    fireEvent.change(screen.getByLabelText('Gears'), { target: { value: '7' } });
+
+    fireEvent.change(screen.getByLabelText('Tags'), { target: { value: 'Sport' } });
+    fireEvent.click(screen.getByText('Add Tag'));
+
+    fireEvent.click(screen.getByText('Add Car'));
+
+    await waitFor(() => {
+      expect(mockedAxios.post).toHaveBeenCalledWith('/api/products', {
+        model: 'AMG',
+        description: 'desc',
+        year: '2023',
+        gears: '7',
+        tags: ['Sport'],
+      });
+    });
+  });
 });

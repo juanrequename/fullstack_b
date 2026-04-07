@@ -106,4 +106,17 @@ describe("PATCH /api/orders/[orderId]/next-status", () => {
     expect(res.status).toHaveBeenCalledWith(500);
     expect(mockRelease).toHaveBeenCalled();
   });
+
+  it("should return 400 when order is Cancelled", async () => {
+    mockQuery
+      .mockResolvedValueOnce(undefined) // BEGIN
+      .mockResolvedValueOnce({ rows: [{ history_id: 3, state_name: "Cancelled" }] })
+      .mockResolvedValueOnce(undefined); // ROLLBACK
+
+    await handler(req as NextApiRequest, res as NextApiResponse);
+    expect(res.status).toHaveBeenCalledWith(400);
+    expect(res.json).toHaveBeenCalledWith(
+      expect.objectContaining({ error: expect.stringContaining("Cannot advance") })
+    );
+  });
 });

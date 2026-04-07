@@ -113,4 +113,84 @@ describe("POST /api/products", () => {
     expect(res.status).toHaveBeenCalledWith(500);
     expect(mockRelease).toHaveBeenCalled();
   });
+
+  it("should create product without tags when tags array is empty", async () => {
+    req.body = {
+      model: "CLA",
+      description: "quidem molestiae enim",
+      year: "2022",
+      gears: "8",
+      tags: [],
+    };
+
+    mockFetch.mockResolvedValueOnce({
+      json: async () => [{ title: "quidem molestiae enim" }],
+    });
+
+    mockQuery
+      .mockResolvedValueOnce(undefined) // BEGIN
+      .mockResolvedValueOnce({ rows: [{ product_id: 50 }] }) // INSERT product
+      .mockResolvedValueOnce(undefined); // COMMIT
+
+    await handler(req as NextApiRequest, res as NextApiResponse);
+
+    expect(res.status).toHaveBeenCalledWith(201);
+    expect(res.json).toHaveBeenCalledWith(
+      expect.objectContaining({ product_id: 50, model: "CLA", tags: [] })
+    );
+  });
+
+  it("should create a new tag when it does not exist", async () => {
+    req.body = {
+      model: "EQS",
+      description: "quidem molestiae enim",
+      year: "2023",
+      gears: "9",
+      tags: ["Electric"],
+    };
+
+    mockFetch.mockResolvedValueOnce({
+      json: async () => [{ title: "quidem molestiae enim" }],
+    });
+
+    mockQuery
+      .mockResolvedValueOnce(undefined) // BEGIN
+      .mockResolvedValueOnce({ rows: [{ product_id: 77 }] }) // INSERT product
+      .mockResolvedValueOnce({ rows: [] }) // SELECT tag - not found
+      .mockResolvedValueOnce({ rows: [{ tag_id: 10 }] }) // INSERT new tag
+      .mockResolvedValueOnce({ rows: [] }) // INSERT products_tags
+      .mockResolvedValueOnce(undefined); // COMMIT
+
+    await handler(req as NextApiRequest, res as NextApiResponse);
+
+    expect(res.status).toHaveBeenCalledWith(201);
+    expect(res.json).toHaveBeenCalledWith(
+      expect.objectContaining({ product_id: 77, tags: ["Electric"] })
+    );
+  });
+
+  it("should create product when tags field is not provided", async () => {
+    req.body = {
+      model: "GLE",
+      description: "quidem molestiae enim",
+      year: "2024",
+      gears: "7",
+    };
+
+    mockFetch.mockResolvedValueOnce({
+      json: async () => [{ title: "quidem molestiae enim" }],
+    });
+
+    mockQuery
+      .mockResolvedValueOnce(undefined) // BEGIN
+      .mockResolvedValueOnce({ rows: [{ product_id: 88 }] }) // INSERT product
+      .mockResolvedValueOnce(undefined); // COMMIT
+
+    await handler(req as NextApiRequest, res as NextApiResponse);
+
+    expect(res.status).toHaveBeenCalledWith(201);
+    expect(res.json).toHaveBeenCalledWith(
+      expect.objectContaining({ product_id: 88, model: "GLE" })
+    );
+  });
 });
