@@ -64,3 +64,8 @@ The objective of this test is to implement several backend functionalities for m
 If you have any questions or need further clarifications, do not hesitate to contact us.
 
 Good luck and happy coding!
+
+
+
+## API DOCS 
+http://localhost:3000/api-docs
