@@ -1,5 +1,19 @@
 # Full Stack Developer Test - Mercedes-Benz
 
+
+▶️ **Watch Demo Video**
+
+[![Watch Demo Video](https://cdn.loom.com/sessions/thumbnails/90a749de5d3048948aa621d7b545288d-92fd3c7343416fde-full-play.gif#t=0.1)](https://www.loom.com/embed/90a749de5d3048948aa621d7b545288d)
+
+---
+
+
+## API DOCS 
+http://localhost:3000/api-docs
+
+
+---
+
 Welcome to the Backend test for Mercedes-Benz! Below, you will find the instructions to complete the test.
 
 ## Setup
@@ -67,5 +81,3 @@ Good luck and happy coding!
 
 
 
-## API DOCS 
-http://localhost:3000/api-docs
