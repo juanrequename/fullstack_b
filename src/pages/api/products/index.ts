@@ -1,4 +1,5 @@
 import * as productService from "@/services/product.service";
+import { createProductSchema } from "@/lib/schemas";
 import CustomError, { METHOD, RESPONSE_CODES } from "@/types/api";
 import { NextApiRequest, NextApiResponse } from "next";
 
@@ -89,11 +90,12 @@ export default async function handler(
     return res.status(RESPONSE_CODES.METHOD_NOT_ALLOWED).json({ error: "Method not allowed" });
   }
 
-  const { model, description, year, gears, tags } = req.body;
-
-  if (!model || !description || !year || !gears) {
-    return res.status(RESPONSE_CODES.BAD_REQUEST).json({ error: "Missing required fields: model, description, year, gears" });
+  const parsed = createProductSchema.safeParse(req.body);
+  if (!parsed.success) {
+    return res.status(RESPONSE_CODES.BAD_REQUEST).json({ error: parsed.error.issues.map((e) => e.message).join(", ") });
   }
+
+  const { model, description, year, gears, tags } = parsed.data;
 
   try {
     const result = await productService.createProduct({ model, description, year, gears, tags });

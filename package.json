@@ -33,7 +33,8 @@
     "redux": "4.0.0",
     "redux-devtools-extension": "2.13.9",
     "redux-saga": "^1.3.0",
-    "swagger-ui-react": "^5.32.1"
+    "swagger-ui-react": "^5.32.1",
+    "zod": "^4.3.6"
   },
   "devDependencies": {
     "@types/lodash": "^4.17.15",

@@ -1,4 +1,5 @@
 import * as orderService from "@/services/order.service";
+import { searchOrdersSchema } from "@/lib/schemas";
 import { METHOD, RESPONSE_CODES } from "@/types/api";
 import { NextApiRequest, NextApiResponse } from "next";
 
@@ -90,7 +91,12 @@ export default async function handler(
     return res.status(RESPONSE_CODES.METHOD_NOT_ALLOWED).json({ error: "Method not allowed" });
   }
 
-  const { model, description, tags, startDate, endDate, gears } = req.query;
+  const parsed = searchOrdersSchema.safeParse(req.query);
+  if (!parsed.success) {
+    return res.status(RESPONSE_CODES.BAD_REQUEST).json({ error: parsed.error.issues.map((e) => e.message).join(", ") });
+  }
+
+  const { model, description, tags, startDate, endDate, gears } = parsed.data;
 
   try {
     const result = await orderService.searchOrders({ model, description, tags, startDate, endDate, gears });

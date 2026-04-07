@@ -1,4 +1,5 @@
 import * as orderService from "@/services/order.service";
+import { orderIdSchema } from "@/lib/schemas";
 import CustomError, { METHOD, RESPONSE_CODES } from "@/types/api";
 import { NextApiRequest, NextApiResponse } from "next";
 
@@ -57,10 +58,12 @@ export default async function handler(
     return res.status(RESPONSE_CODES.METHOD_NOT_ALLOWED).json({ error: "Method not allowed" });
   }
 
-  const orderId = Number(req.query.orderId);
-  if (isNaN(orderId)) {
-    return res.status(RESPONSE_CODES.BAD_REQUEST).json({ error: "Invalid order ID" });
+  const parsed = orderIdSchema.safeParse(req.query);
+  if (!parsed.success) {
+    return res.status(RESPONSE_CODES.BAD_REQUEST).json({ error: parsed.error.issues.map((e) => e.message).join(", ") });
   }
+
+  const { orderId } = parsed.data;
 
   try {
     const result = await orderService.advanceOrderStatus(orderId);
