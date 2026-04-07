@@ -1,12 +1,54 @@
-import { getDBConnection } from "@/database/database";
-import { METHOD, RESPONSE_CODES } from "@/types/api";
+import * as orderService from "@/services/order.service";
+import CustomError, { METHOD, RESPONSE_CODES } from "@/types/api";
 import { NextApiRequest, NextApiResponse } from "next";
 
-const STATUS_PROGRESSION: Record<string, string> = {
-  Pending: "Shipped",
-  Shipped: "Delivered",
-};
-
+/**
+ * @swagger
+ * /api/orders/{orderId}/next-status:
+ *   patch:
+ *     tags:
+ *       - Orders
+ *     summary: Advance order status
+ *     description: Updates an order's status to the next state in the progression (Pending -> Shipped -> Delivered). Cannot advance from Delivered or Cancelled.
+ *     parameters:
+ *       - in: path
+ *         name: orderId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: The order ID
+ *         example: 1
+ *     responses:
+ *       200:
+ *         description: Status updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 order_id:
+ *                   type: integer
+ *                   example: 1
+ *                 new_status:
+ *                   type: string
+ *                   enum: [Shipped, Delivered]
+ *                   example: "Shipped"
+ *       400:
+ *         description: Invalid order ID or cannot advance from current status
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *       404:
+ *         description: Order not found
+ *       405:
+ *         description: Method not allowed
+ *       500:
+ *         description: Internal server error
+ */
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
@@ -20,61 +62,15 @@ export default async function handler(
     return res.status(RESPONSE_CODES.BAD_REQUEST).json({ error: "Invalid order ID" });
   }
 
-  const pool = getDBConnection();
-  const client = await pool.connect();
   try {
-    await client.query("BEGIN");
-
-    const currentResult = await client.query(
-      `SELECT sh.history_id, s.state_name
-       FROM state_history sh
-       JOIN states s ON s.state_id = sh.state_id
-       WHERE sh.order_id = $1 AND sh.current_state = true`,
-      [orderId]
-    );
-
-    if (currentResult.rows.length === 0) {
-      await client.query("ROLLBACK");
-      return res.status(RESPONSE_CODES.NOT_FOUND).json({ error: "Order not found or has no current state" });
-    }
-
-    const currentState = currentResult.rows[0].state_name;
-    const nextState = STATUS_PROGRESSION[currentState];
-
-    if (!nextState) {
-      await client.query("ROLLBACK");
-      return res.status(RESPONSE_CODES.BAD_REQUEST).json({ error: `Cannot advance from status: ${currentState}` });
-    }
-
-    const nextStateResult = await client.query(
-      "SELECT state_id FROM states WHERE state_name = $1",
-      [nextState]
-    );
-
-    if (nextStateResult.rows.length === 0) {
-      await client.query("ROLLBACK");
-      return res.status(RESPONSE_CODES.INTERNAL_SERVER_ERROR).json({ error: `State '${nextState}' not found in database` });
-    }
-
-    const nextStateId = nextStateResult.rows[0].state_id;
-
-    await client.query(
-      "UPDATE state_history SET current_state = false WHERE order_id = $1 AND current_state = true",
-      [orderId]
-    );
-
-    await client.query(
-      "INSERT INTO state_history (order_id, state_id, current_state) VALUES ($1, $2, true)",
-      [orderId, nextStateId]
-    );
-
-    await client.query("COMMIT");
-    res.status(RESPONSE_CODES.OK).json({ order_id: orderId, new_status: nextState });
+    const result = await orderService.advanceOrderStatus(orderId);
+    res.status(RESPONSE_CODES.OK).json(result);
   } catch (error) {
-    await client.query("ROLLBACK");
-    console.error("Error updating order status:", error);
-    res.status(RESPONSE_CODES.INTERNAL_SERVER_ERROR).json({ error: "Internal Server Error" });
-  } finally {
-    client.release();
+    if (error instanceof CustomError) {
+      res.status(error.code).json({ error: error.message });
+    } else {
+      console.error("Error updating order status:", error);
+      res.status(RESPONSE_CODES.INTERNAL_SERVER_ERROR).json({ error: "Internal Server Error" });
+    }
   }
 }

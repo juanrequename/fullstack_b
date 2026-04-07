@@ -1,17 +1,86 @@
-import { getDBConnection } from "@/database/database";
-import { METHOD, RESPONSE_CODES } from "@/types/api";
+import * as productService from "@/services/product.service";
+import CustomError, { METHOD, RESPONSE_CODES } from "@/types/api";
 import { NextApiRequest, NextApiResponse } from "next";
 
-interface Album {
-  title: string;
-}
-
-async function validateDescription(description: string): Promise<boolean> {
-  const response = await fetch("https://jsonplaceholder.typicode.com/albums");
-  const albums: Album[] = await response.json();
-  return albums.some((album) => album.title === description);
-}
-
+/**
+ * @swagger
+ * /api/products:
+ *   post:
+ *     tags:
+ *       - Products
+ *     summary: Create a new product
+ *     description: Creates a new product with optional tags. The description is validated against an external album API.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - model
+ *               - description
+ *               - year
+ *               - gears
+ *             properties:
+ *               model:
+ *                 type: string
+ *                 description: Product model name
+ *                 example: "GLA"
+ *               description:
+ *                 type: string
+ *                 description: Must match an album title from jsonplaceholder API
+ *                 example: "quidem molestiae enim"
+ *               year:
+ *                 type: integer
+ *                 description: Model year
+ *                 example: 2024
+ *               gears:
+ *                 type: integer
+ *                 description: Number of gears
+ *                 example: 6
+ *               tags:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                 description: Optional list of tags
+ *                 example: ["SUV", "Mercedes"]
+ *     responses:
+ *       201:
+ *         description: Product created successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 product_id:
+ *                   type: integer
+ *                   example: 13
+ *                 model:
+ *                   type: string
+ *                 description:
+ *                   type: string
+ *                 year:
+ *                   type: integer
+ *                 gears:
+ *                   type: integer
+ *                 tags:
+ *                   type: array
+ *                   items:
+ *                     type: string
+ *       400:
+ *         description: Missing required fields or invalid description
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *       405:
+ *         description: Method not allowed
+ *       500:
+ *         description: Internal server error
+ */
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
@@ -26,51 +95,15 @@ export default async function handler(
     return res.status(RESPONSE_CODES.BAD_REQUEST).json({ error: "Missing required fields: model, description, year, gears" });
   }
 
-  const isValid = await validateDescription(description);
-  if (!isValid) {
-    return res.status(RESPONSE_CODES.BAD_REQUEST).json({
-      error: "Description does not match any album title from the external source",
-    });
-  }
-
-  const pool = getDBConnection();
-  const client = await pool.connect();
   try {
-    await client.query("BEGIN");
-
-    const productResult = await client.query(
-      "INSERT INTO products (model, description, year, gears) VALUES ($1, $2, $3, $4) RETURNING product_id",
-      [model, description, Number(year), Number(gears)]
-    );
-    const productId = productResult.rows[0].product_id;
-
-    if (Array.isArray(tags) && tags.length > 0) {
-      for (const tagName of tags) {
-        const existing = await client.query("SELECT tag_id FROM tags WHERE name = $1", [tagName]);
-        let tagId: number;
-        if (existing.rows.length > 0) {
-          tagId = existing.rows[0].tag_id;
-        } else {
-          const inserted = await client.query(
-            "INSERT INTO tags (name) VALUES ($1) RETURNING tag_id",
-            [tagName]
-          );
-          tagId = inserted.rows[0].tag_id;
-        }
-        await client.query(
-          "INSERT INTO products_tags (product_id, tag_id) VALUES ($1, $2)",
-          [productId, tagId]
-        );
-      }
-    }
-
-    await client.query("COMMIT");
-    res.status(RESPONSE_CODES.CREATED).json({ product_id: productId, model, description, year: Number(year), gears: Number(gears), tags });
+    const result = await productService.createProduct({ model, description, year, gears, tags });
+    res.status(RESPONSE_CODES.CREATED).json(result);
   } catch (error) {
-    await client.query("ROLLBACK");
-    console.error("Error creating product:", error);
-    res.status(RESPONSE_CODES.INTERNAL_SERVER_ERROR).json({ error: "Internal Server Error" });
-  } finally {
-    client.release();
+    if (error instanceof CustomError) {
+      res.status(error.code).json({ error: error.message });
+    } else {
+      console.error("Error creating product:", error);
+      res.status(RESPONSE_CODES.INTERNAL_SERVER_ERROR).json({ error: "Internal Server Error" });
+    }
   }
 }

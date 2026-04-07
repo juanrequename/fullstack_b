@@ -1,8 +1,87 @@
-import { getDBConnection } from "@/database/database";
-import { ORDERS_BASE_QUERY, ORDERS_GROUP_ORDER } from "@/database/queries";
+import * as orderService from "@/services/order.service";
 import { METHOD, RESPONSE_CODES } from "@/types/api";
 import { NextApiRequest, NextApiResponse } from "next";
 
+/**
+ * @swagger
+ * /api/orders/search:
+ *   get:
+ *     tags:
+ *       - Orders
+ *     summary: Search orders
+ *     description: Search and filter orders by model, description, tags, date range, and gears.
+ *     parameters:
+ *       - in: query
+ *         name: model
+ *         schema:
+ *           type: string
+ *         description: Exact product model match
+ *         example: "GLA"
+ *       - in: query
+ *         name: description
+ *         schema:
+ *           type: string
+ *         description: Partial description match (case-insensitive)
+ *       - in: query
+ *         name: tags
+ *         schema:
+ *           type: string
+ *         description: Comma-separated list of tags to filter by
+ *         example: "SUV,Mercedes"
+ *       - in: query
+ *         name: startDate
+ *         schema:
+ *           type: string
+ *           format: date
+ *         description: Filter orders from this date (inclusive)
+ *         example: "2024-01-01"
+ *       - in: query
+ *         name: endDate
+ *         schema:
+ *           type: string
+ *           format: date
+ *         description: Filter orders before this date (exclusive)
+ *         example: "2025-01-01"
+ *       - in: query
+ *         name: gears
+ *         schema:
+ *           type: integer
+ *         description: Exact gear count match
+ *         example: 6
+ *     responses:
+ *       200:
+ *         description: Filtered list of orders
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   order_id:
+ *                     type: integer
+ *                   user:
+ *                     type: string
+ *                   model:
+ *                     type: string
+ *                   tags:
+ *                     type: array
+ *                     items:
+ *                       type: string
+ *                   order_date:
+ *                     type: string
+ *                     format: date-time
+ *                   current_status_date:
+ *                     type: string
+ *                     format: date-time
+ *                   status:
+ *                     type: string
+ *                     enum: [Pending, Shipped, Delivered, Cancelled]
+ *       405:
+ *         description: Method not allowed
+ *       500:
+ *         description: Internal server error
+ */
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
@@ -13,62 +92,11 @@ export default async function handler(
 
   const { model, description, tags, startDate, endDate, gears } = req.query;
 
-  const conditions: string[] = [];
-  const params: (string | number)[] = [];
-  let paramIndex = 1;
-
-  if (model) {
-    conditions.push(`p.model = $${paramIndex++}`);
-    params.push(String(model));
-  }
-
-  if (description) {
-    conditions.push(`p.description ILIKE $${paramIndex++}`);
-    params.push(`%${String(description)}%`);
-  }
-
-  if (tags) {
-    const tagList = String(tags).split(",").map((t) => t.trim());
-    conditions.push(
-      `EXISTS (
-        SELECT 1 FROM products_tags pt2
-        JOIN tags t2 ON t2.tag_id = pt2.tag_id
-        WHERE pt2.product_id = p.product_id
-        AND t2.name = ANY($${paramIndex++}::text[])
-      )`
-    );
-    params.push(tagList as unknown as string);
-  }
-
-  if (startDate) {
-    conditions.push(`o.order_date >= $${paramIndex++}`);
-    params.push(String(startDate));
-  }
-
-  if (endDate) {
-    conditions.push(`o.order_date < $${paramIndex++}`);
-    params.push(String(endDate));
-  }
-
-  if (gears) {
-    conditions.push(`p.gears = $${paramIndex++}`);
-    params.push(Number(gears));
-  }
-
-  const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
-
-  const query = `${ORDERS_BASE_QUERY}
-    ${whereClause}${ORDERS_GROUP_ORDER}`;
-
-  const pool = getDBConnection();
-  const client = await pool.connect();
   try {
-    const result = await client.query(query, params);
-    res.status(RESPONSE_CODES.OK).json(result.rows);
+    const result = await orderService.searchOrders({ model, description, tags, startDate, endDate, gears });
+    res.status(RESPONSE_CODES.OK).json(result);
   } catch (error) {
     console.error("Error searching orders:", error);
     res.status(RESPONSE_CODES.INTERNAL_SERVER_ERROR).json({ error: "Internal Server Error" });
-  } finally {
-    client.release();
   }
 }

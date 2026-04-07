@@ -7,3 +7,12 @@ export interface Order {
   current_status_date: string;
   status: string;
 }
+
+export interface OrderSearchFilters {
+  model?: string | string[];
+  description?: string | string[];
+  tags?: string | string[];
+  startDate?: string | string[];
+  endDate?: string | string[];
+  gears?: string | string[];
+}
