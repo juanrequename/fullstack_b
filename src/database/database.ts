@@ -1,6 +1,6 @@
 import { Pool, PoolConfig } from "pg";
 import _once from "lodash/once";
-import { environment } from "@/lib/environment";
+import { environment } from "@/config/environment";
 
 export const _getDBConnection = () => {
   const poolConfig: PoolConfig = {

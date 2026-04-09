@@ -1,6 +1,6 @@
 import { getDBConnection } from "@/database/database";
-import logger from "@/lib/logger";
-import { environment } from "@/lib/environment";
+import logger from "@/config/logger";
+import { environment } from "@/config/environment";
 import * as productRepo from "@/repositories/product.repository";
 import CustomError, { RESPONSE_CODES } from "@/types/api";
 import { CreateProductInput, CreateProductResult } from "@/types/product";

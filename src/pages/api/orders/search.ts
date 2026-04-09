@@ -1,4 +1,4 @@
-import logger from "@/lib/logger";
+import logger from "@/config/logger";
 import * as orderService from "@/services/order.service";
 import { searchOrdersSchema } from "@/lib/schemas";
 import { METHOD, RESPONSE_CODES } from "@/types/api";

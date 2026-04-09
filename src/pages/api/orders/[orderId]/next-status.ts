@@ -1,4 +1,4 @@
-import logger from "@/lib/logger";
+import logger from "@/config/logger";
 import * as orderService from "@/services/order.service";
 import { orderIdSchema } from "@/lib/schemas";
 import CustomError, { METHOD, RESPONSE_CODES } from "@/types/api";
