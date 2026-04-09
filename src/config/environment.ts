@@ -1,5 +1,6 @@
 export const environment = {
   nodeEnv: process.env.NODE_ENV ?? "development",
+  logLevel: process.env.LOG_LEVEL,
   port: Number(process.env.PORT ?? 3000),
   dbHost: process.env.DB_HOST ?? "localhost",
   dbPort: Number(process.env.DB_PORT ?? 5432),

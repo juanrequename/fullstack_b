@@ -26,7 +26,7 @@ import { NextApiRequest, NextApiResponse } from "next";
  *           type: integer
  *           minimum: 1
  *           maximum: 100
- *           default: 20
+ *           default: 50
  *         description: Number of orders per page
  *     responses:
  *       200:
