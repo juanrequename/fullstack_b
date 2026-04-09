@@ -9,10 +9,10 @@ export interface Order {
 }
 
 export interface OrderSearchFilters {
-  model?: string | string[];
-  description?: string | string[];
+  model?: string;
+  description?: string;
   tags?: string | string[];
-  startDate?: string | string[];
-  endDate?: string | string[];
-  gears?: string | string[];
+  startDate?: string;
+  endDate?: string;
+  gears?: string;
 }
