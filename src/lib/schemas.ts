@@ -20,17 +20,11 @@ export const searchOrdersSchema = z.object({
     .string()
     .regex(/^\d{4}-\d{2}-\d{2}$/, "endDate must be in YYYY-MM-DD format")
     .optional(),
-  gears: z
-    .string()
-    .regex(/^\d+$/, "gears must be a positive integer")
-    .optional(),
+  gears: z.string().regex(/^\d+$/, "gears must be a positive integer").optional(),
 });
 
 export const orderIdSchema = z.object({
-  orderId: z
-    .string()
-    .regex(/^\d+$/, "orderId must be a positive integer")
-    .transform(Number),
+  orderId: z.string().regex(/^\d+$/, "orderId must be a positive integer").transform(Number),
 });
 
 export const ordersPaginationSchema = z.object({

@@ -53,13 +53,19 @@ export async function advanceOrderStatus(orderId: number) {
     const nextState = STATUS_PROGRESSION[currentState.state_name];
 
     if (!nextState) {
-      throw new CustomError(RESPONSE_CODES.BAD_REQUEST, `Cannot advance from status: ${currentState.state_name}`);
+      throw new CustomError(
+        RESPONSE_CODES.BAD_REQUEST,
+        `Cannot advance from status: ${currentState.state_name}`
+      );
     }
 
     const nextStateId = await orderRepo.getStateIdByName(client, nextState);
 
     if (nextStateId === null) {
-      throw new CustomError(RESPONSE_CODES.INTERNAL_SERVER_ERROR, `State '${nextState}' not found in database`);
+      throw new CustomError(
+        RESPONSE_CODES.INTERNAL_SERVER_ERROR,
+        `State '${nextState}' not found in database`
+      );
     }
 
     await orderRepo.deactivateCurrentState(client, orderId);

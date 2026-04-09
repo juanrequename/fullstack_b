@@ -44,10 +44,7 @@ import { NextApiRequest, NextApiResponse } from "next";
  *       500:
  *         description: Internal server error
  */
-export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse
-) {
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== METHOD.GET) {
     return res.status(RESPONSE_CODES.METHOD_NOT_ALLOWED).json({ error: "Method not allowed" });
   }

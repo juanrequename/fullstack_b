@@ -20,16 +20,13 @@ export async function findTagByName(client: PoolClient, name: string): Promise<n
 }
 
 export async function createTag(client: PoolClient, name: string): Promise<number> {
-  const result = await client.query(
-    "INSERT INTO tags (name) VALUES ($1) RETURNING tag_id",
-    [name]
-  );
+  const result = await client.query("INSERT INTO tags (name) VALUES ($1) RETURNING tag_id", [name]);
   return result.rows[0].tag_id;
 }
 
 export async function linkProductTag(client: PoolClient, productId: number, tagId: number) {
-  await client.query(
-    "INSERT INTO products_tags (product_id, tag_id) VALUES ($1, $2)",
-    [productId, tagId]
-  );
+  await client.query("INSERT INTO products_tags (product_id, tag_id) VALUES ($1, $2)", [
+    productId,
+    tagId,
+  ]);
 }

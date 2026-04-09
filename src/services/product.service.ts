@@ -16,7 +16,7 @@ async function validateDescription(description: string): Promise<boolean> {
       throw new Error("Failed to fetch albums");
     }
     const albums: Album[] = await response.json();
-    return albums.some((album) => album.title === description);
+    return albums.some(album => album.title === description);
   } catch (error) {
     logger.error({ err: error }, "Error validating description");
     return false;

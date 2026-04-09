@@ -43,9 +43,7 @@ describe("POST /api/products", () => {
     req.body = { model: "GLA" };
     await handler(req as NextApiRequest, res as NextApiResponse);
     expect(res.status).toHaveBeenCalledWith(400);
-    expect(res.json).toHaveBeenCalledWith(
-      expect.objectContaining({ error: expect.any(String) })
-    );
+    expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ error: expect.any(String) }));
   });
 
   it("should return 400 when description does not match any album title", async () => {

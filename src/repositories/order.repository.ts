@@ -1,10 +1,21 @@
 import { PoolClient } from "pg";
-import { ORDERS_BASE_QUERY, ORDERS_GROUP_ORDER, ORDERS_QUERY, REPORT_QUERY } from "@/database/queries";
+import {
+  ORDERS_BASE_QUERY,
+  ORDERS_GROUP_ORDER,
+  ORDERS_QUERY,
+  REPORT_QUERY,
+} from "@/database/queries";
 import { OrderSearchFilters } from "@/types/order";
 
-export async function getAllOrders(client: PoolClient, pagination: { page: number; limit: number }) {
+export async function getAllOrders(
+  client: PoolClient,
+  pagination: { page: number; limit: number }
+) {
   const offset = (pagination.page - 1) * pagination.limit;
-  const result = await client.query(`${ORDERS_QUERY} LIMIT $1 OFFSET $2`, [pagination.limit, offset]);
+  const result = await client.query(`${ORDERS_QUERY} LIMIT $1 OFFSET $2`, [
+    pagination.limit,
+    offset,
+  ]);
   return result.rows;
 }
 
@@ -29,7 +40,9 @@ export async function searchOrders(client: PoolClient, filters: OrderSearchFilte
   }
 
   if (filters.tags) {
-    const tagList = String(filters.tags).split(",").map((t) => t.trim());
+    const tagList = String(filters.tags)
+      .split(",")
+      .map(t => t.trim());
     conditions.push(
       `EXISTS (
         SELECT 1 FROM products_tags pt2
@@ -78,10 +91,9 @@ export async function getCurrentState(client: PoolClient, orderId: number) {
 }
 
 export async function getStateIdByName(client: PoolClient, stateName: string) {
-  const result = await client.query(
-    "SELECT state_id FROM states WHERE state_name = $1",
-    [stateName]
-  );
+  const result = await client.query("SELECT state_id FROM states WHERE state_name = $1", [
+    stateName,
+  ]);
   return result.rows.length > 0 ? result.rows[0].state_id : null;
 }
 

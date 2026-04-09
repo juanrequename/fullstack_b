@@ -1,13 +1,13 @@
-import pino from 'pino';
-import { environment } from '@/config/environment';
+import pino from "pino";
+import { environment } from "@/config/environment";
 
 const logger = pino({
-  level: environment.nodeEnv === 'production' ? 'info' : 'debug',
+  level: environment.nodeEnv === "production" ? "info" : "debug",
   transport:
-    environment.nodeEnv === 'production'
+    environment.nodeEnv === "production"
       ? undefined
       : {
-          target: 'pino-pretty',
+          target: "pino-pretty",
           options: { colorize: true },
         },
 });

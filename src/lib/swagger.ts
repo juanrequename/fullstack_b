@@ -8,8 +8,7 @@ export const getApiDocs = async () => {
       info: {
         title: "Mercedes-Benz Order Management API",
         version: "1.0.0",
-        description:
-          "API for managing Mercedes-Benz vehicle orders, products, and sales reports.",
+        description: "API for managing Mercedes-Benz vehicle orders, products, and sales reports.",
       },
       tags: [
         { name: "Orders", description: "Order management endpoints" },
