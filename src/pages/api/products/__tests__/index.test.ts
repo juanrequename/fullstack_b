@@ -51,6 +51,7 @@ describe("POST /api/products", () => {
   it("should return 400 when description does not match any album title", async () => {
     req.body = { model: "GLA", description: "invalid desc", year: "2021", gears: "6" };
     mockFetch.mockResolvedValueOnce({
+      ok: true,
       json: async () => [{ title: "quidem molestiae enim" }],
     });
 
@@ -72,6 +73,7 @@ describe("POST /api/products", () => {
     };
 
     mockFetch.mockResolvedValueOnce({
+      ok: true,
       json: async () => [{ title: "quidem molestiae enim" }],
     });
 
@@ -101,6 +103,7 @@ describe("POST /api/products", () => {
     };
 
     mockFetch.mockResolvedValueOnce({
+      ok: true,
       json: async () => [{ title: "quidem molestiae enim" }],
     });
 
@@ -124,6 +127,7 @@ describe("POST /api/products", () => {
     };
 
     mockFetch.mockResolvedValueOnce({
+      ok: true,
       json: async () => [{ title: "quidem molestiae enim" }],
     });
 
@@ -150,6 +154,7 @@ describe("POST /api/products", () => {
     };
 
     mockFetch.mockResolvedValueOnce({
+      ok: true,
       json: async () => [{ title: "quidem molestiae enim" }],
     });
 
@@ -178,6 +183,7 @@ describe("POST /api/products", () => {
     };
 
     mockFetch.mockResolvedValueOnce({
+      ok: true,
       json: async () => [{ title: "quidem molestiae enim" }],
     });
 

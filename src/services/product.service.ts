@@ -1,4 +1,5 @@
 import { getDBConnection } from "@/database/database";
+import logger from "@/lib/logger";
 import * as productRepo from "@/repositories/product.repository";
 import CustomError, { RESPONSE_CODES } from "@/types/api";
 import { CreateProductInput, CreateProductResult } from "@/types/product";
@@ -7,10 +8,20 @@ interface Album {
   title: string;
 }
 
+const ALBUMS_API_URL = process.env.ALBUMS_API_URL ?? "https://jsonplaceholder.typicode.com/albums";
+
 async function validateDescription(description: string): Promise<boolean> {
-  const response = await fetch("https://jsonplaceholder.typicode.com/albums");
-  const albums: Album[] = await response.json();
-  return albums.some((album) => album.title === description);
+  try {
+    const response = await fetch(ALBUMS_API_URL);
+    if (!response.ok) {
+      throw new Error("Failed to fetch albums");
+    }
+    const albums: Album[] = await response.json();
+    return albums.some((album) => album.title === description);
+  } catch (error) {
+    logger.error({ err: error }, "Error validating description");
+    return false;
+  }
 }
 
 export async function createProduct(input: CreateProductInput): Promise<CreateProductResult> {
