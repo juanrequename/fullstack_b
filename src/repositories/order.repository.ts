@@ -2,8 +2,9 @@ import { PoolClient } from "pg";
 import { ORDERS_BASE_QUERY, ORDERS_GROUP_ORDER, ORDERS_QUERY, REPORT_QUERY } from "@/database/queries";
 import { OrderSearchFilters } from "@/types/order";
 
-export async function getAllOrders(client: PoolClient) {
-  const result = await client.query(ORDERS_QUERY);
+export async function getAllOrders(client: PoolClient, pagination: { page: number; limit: number }) {
+  const offset = (pagination.page - 1) * pagination.limit;
+  const result = await client.query(`${ORDERS_QUERY} LIMIT $1 OFFSET $2`, [pagination.limit, offset]);
   return result.rows;
 }
 

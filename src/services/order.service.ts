@@ -8,11 +8,11 @@ const STATUS_PROGRESSION: Record<string, string> = {
   Shipped: "Delivered",
 };
 
-export async function getOrders() {
+export async function getOrders(pagination: { page: number; limit: number }) {
   const pool = getDBConnection();
   const client = await pool.connect();
   try {
-    return await orderRepo.getAllOrders(client);
+    return await orderRepo.getAllOrders(client, pagination);
   } finally {
     client.release();
   }

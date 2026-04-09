@@ -1,5 +1,6 @@
 import logger from "@/lib/logger";
 import * as orderService from "@/services/order.service";
+import { ordersPaginationSchema } from "@/lib/schemas";
 import { METHOD, RESPONSE_CODES } from "@/types/api";
 import { NextApiRequest, NextApiResponse } from "next";
 
@@ -11,6 +12,22 @@ import { NextApiRequest, NextApiResponse } from "next";
  *       - Orders
  *     summary: Get all orders
  *     description: Returns a list of all orders with user, product, tags, and current status information.
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           default: 1
+ *         description: Page number (1-based)
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           maximum: 100
+ *           default: 20
+ *         description: Number of orders per page
  *     responses:
  *       200:
  *         description: List of orders
@@ -57,8 +74,15 @@ export default async function handler(
     return res.status(RESPONSE_CODES.METHOD_NOT_ALLOWED).json({ error: "Method not allowed" });
   }
 
+  const parsed = ordersPaginationSchema.safeParse(req.query ?? {});
+  if (!parsed.success) {
+    return res.status(RESPONSE_CODES.BAD_REQUEST).json({ error: parsed.error.issues.map((e) => e.message).join(", ") });
+  }
+
+  const { page, limit } = parsed.data;
+
   try {
-    const result = await orderService.getOrders();
+    const result = await orderService.getOrders({ page, limit });
     res.status(RESPONSE_CODES.OK).json(result);
   } catch (error) {
     logger.error({ err: error }, "Error fetching orders");

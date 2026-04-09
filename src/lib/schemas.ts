@@ -32,3 +32,8 @@ export const orderIdSchema = z.object({
     .regex(/^\d+$/, "orderId must be a positive integer")
     .transform(Number),
 });
+
+export const ordersPaginationSchema = z.object({
+  page: z.coerce.number().int().min(1).default(1),
+  limit: z.coerce.number().int().min(1).max(100).default(50),
+});
