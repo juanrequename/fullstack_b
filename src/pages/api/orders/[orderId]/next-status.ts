@@ -1,3 +1,4 @@
+import logger from "@/lib/logger";
 import * as orderService from "@/services/order.service";
 import { orderIdSchema } from "@/lib/schemas";
 import CustomError, { METHOD, RESPONSE_CODES } from "@/types/api";
@@ -72,7 +73,7 @@ export default async function handler(
     if (error instanceof CustomError) {
       res.status(error.code).json({ error: error.message });
     } else {
-      console.error("Error updating order status:", error);
+      logger.error({ err: error }, "Error updating order status");
       res.status(RESPONSE_CODES.INTERNAL_SERVER_ERROR).json({ error: "Internal Server Error" });
     }
   }

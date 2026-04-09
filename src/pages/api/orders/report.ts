@@ -1,3 +1,4 @@
+import logger from "@/lib/logger";
 import * as orderService from "@/services/order.service";
 import { METHOD, RESPONSE_CODES } from "@/types/api";
 import { NextApiRequest, NextApiResponse } from "next";
@@ -55,7 +56,7 @@ export default async function handler(
     const result = await orderService.getReport();
     res.status(RESPONSE_CODES.OK).json(result);
   } catch (error) {
-    console.error("Error generating report:", error);
+    logger.error({ err: error }, "Error generating report");
     res.status(RESPONSE_CODES.INTERNAL_SERVER_ERROR).json({ error: "Internal Server Error" });
   }
 }

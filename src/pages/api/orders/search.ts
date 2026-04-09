@@ -1,3 +1,4 @@
+import logger from "@/lib/logger";
 import * as orderService from "@/services/order.service";
 import { searchOrdersSchema } from "@/lib/schemas";
 import { METHOD, RESPONSE_CODES } from "@/types/api";
@@ -102,7 +103,7 @@ export default async function handler(
     const result = await orderService.searchOrders({ model, description, tags, startDate, endDate, gears });
     res.status(RESPONSE_CODES.OK).json(result);
   } catch (error) {
-    console.error("Error searching orders:", error);
+    logger.error({ err: error }, "Error searching orders");
     res.status(RESPONSE_CODES.INTERNAL_SERVER_ERROR).json({ error: "Internal Server Error" });
   }
 }

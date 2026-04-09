@@ -1,3 +1,4 @@
+import logger from "@/lib/logger";
 import * as productService from "@/services/product.service";
 import { createProductSchema } from "@/lib/schemas";
 import CustomError, { METHOD, RESPONSE_CODES } from "@/types/api";
@@ -104,7 +105,7 @@ export default async function handler(
     if (error instanceof CustomError) {
       res.status(error.code).json({ error: error.message });
     } else {
-      console.error("Error creating product:", error);
+      logger.error({ err: error }, "Error creating product");
       res.status(RESPONSE_CODES.INTERNAL_SERVER_ERROR).json({ error: "Internal Server Error" });
     }
   }
