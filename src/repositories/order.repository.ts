@@ -69,7 +69,8 @@ export async function getCurrentState(client: PoolClient, orderId: number) {
     `SELECT sh.history_id, s.state_name
        FROM state_history sh
        JOIN states s ON s.state_id = sh.state_id
-       WHERE sh.order_id = $1 AND sh.current_state = true`,
+       WHERE sh.order_id = $1 AND sh.current_state = true
+       FOR UPDATE`,
     [orderId]
   );
   return result.rows.length > 0 ? result.rows[0] : null;
