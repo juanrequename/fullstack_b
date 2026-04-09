@@ -1,5 +1,6 @@
 import { getDBConnection } from "@/database/database";
 import logger from "@/lib/logger";
+import { environment } from "@/lib/environment";
 import * as productRepo from "@/repositories/product.repository";
 import CustomError, { RESPONSE_CODES } from "@/types/api";
 import { CreateProductInput, CreateProductResult } from "@/types/product";
@@ -8,11 +9,9 @@ interface Album {
   title: string;
 }
 
-const ALBUMS_API_URL = process.env.ALBUMS_API_URL ?? "https://jsonplaceholder.typicode.com/albums";
-
 async function validateDescription(description: string): Promise<boolean> {
   try {
-    const response = await fetch(ALBUMS_API_URL);
+    const response = await fetch(environment.albumsApiUrl);
     if (!response.ok) {
       throw new Error("Failed to fetch albums");
     }
