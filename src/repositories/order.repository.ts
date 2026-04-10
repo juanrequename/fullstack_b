@@ -5,12 +5,12 @@ import {
   ORDERS_QUERY,
   REPORT_QUERY,
 } from "@/database/queries";
-import { OrderSearchFilters } from "@/types/order";
+import { Order, OrderSearchFilters } from "@/types/order";
 
 export async function getAllOrders(
   client: PoolClient,
   pagination: { page: number; limit: number }
-) {
+): Promise<Order[]> {
   const offset = (pagination.page - 1) * pagination.limit;
   const result = await client.query(`${ORDERS_QUERY} LIMIT $1 OFFSET $2`, [
     pagination.limit,

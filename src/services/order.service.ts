@@ -1,14 +1,14 @@
 import { getDBConnection } from "@/database/database";
 import * as orderRepo from "@/repositories/order.repository";
 import CustomError, { RESPONSE_CODES } from "@/types/api";
-import { OrderSearchFilters } from "@/types/order";
+import { Order, OrderSearchFilters } from "@/types/order";
 
 const STATUS_PROGRESSION: Record<string, string> = {
   Pending: "Shipped",
   Shipped: "Delivered",
 };
 
-export async function getOrders(pagination: { page: number; limit: number }) {
+export async function getOrders(pagination: { page: number; limit: number }): Promise<Order[]> {
   const pool = getDBConnection();
   const client = await pool.connect();
   try {
