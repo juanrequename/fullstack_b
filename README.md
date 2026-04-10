@@ -1,5 +1,10 @@
 # Full Stack Developer Test - Mercedes-Benz
 
+> [NOTE]
+> The 90-minute coding challenge works as expected with all the requirements, as demonstrated in the video. Minor refactors were implemented afterward.
+
+---
+
 
 ▶️ **Watch Demo Video**
 
