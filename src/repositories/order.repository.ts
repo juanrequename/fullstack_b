@@ -24,7 +24,7 @@ export async function getReport(client: PoolClient) {
   return result.rows;
 }
 
-export async function searchOrders(client: PoolClient, filters: OrderSearchFilters) {
+export async function searchOrders(client: PoolClient, filters: OrderSearchFilters): Promise<Order[]> {
   const conditions: string[] = [];
   const params: (string | number)[] = [];
   let paramIndex = 1;

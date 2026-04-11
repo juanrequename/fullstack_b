@@ -28,7 +28,7 @@ export async function getReport() {
   }
 }
 
-export async function searchOrders(filters: OrderSearchFilters) {
+export async function searchOrders(filters: OrderSearchFilters): Promise<Order[]> {
   const pool = getDBConnection();
   const client = await pool.connect();
   try {
@@ -50,6 +50,7 @@ export async function advanceOrderStatus(orderId: number) {
       throw new CustomError(RESPONSE_CODES.NOT_FOUND, "Order not found or has no current state");
     }
 
+    // Get the next state in the progression
     const nextState = STATUS_PROGRESSION[currentState.state_name];
 
     if (!nextState) {
