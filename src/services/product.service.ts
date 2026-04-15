@@ -11,8 +11,7 @@ interface Album {
 
 async function validateDescription(description: string): Promise<boolean> {
   const controller = new AbortController();
-  const timeoutMs = environment.albumsApiTimeoutMs;
-  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+  const timeoutId = setTimeout(() => controller.abort(), environment.albumsApiTimeoutMs);
   try {
     const response = await fetch(environment.albumsApiUrl, {
       signal: controller.signal,
