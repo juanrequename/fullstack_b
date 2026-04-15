@@ -6,6 +6,7 @@ import {
   REPORT_QUERY,
 } from "@/database/queries";
 import { Order, OrderSearchFilters } from "@/types/order";
+import { ReportRow } from "@/types/report";
 
 export async function getAllOrders(
   client: PoolClient,
@@ -19,8 +20,8 @@ export async function getAllOrders(
   return result.rows;
 }
 
-export async function getReport(client: PoolClient) {
-  const result = await client.query(REPORT_QUERY);
+export async function getReport(client: PoolClient): Promise<ReportRow[]> {
+  const result = await client.query<ReportRow>(REPORT_QUERY);
   return result.rows;
 }
 

@@ -2,6 +2,7 @@ import { getDBConnection } from "@/database/database";
 import * as orderRepo from "@/repositories/order.repository";
 import CustomError, { RESPONSE_CODES } from "@/types/api";
 import { Order, OrderSearchFilters } from "@/types/order";
+import { ReportRow } from "@/types/report";
 
 const STATUS_PROGRESSION: Record<string, string> = {
   Pending: "Shipped",
@@ -18,7 +19,7 @@ export async function getOrders(pagination: { page: number; limit: number }): Pr
   }
 }
 
-export async function getReport() {
+export async function getReport(): Promise<ReportRow[]> {
   const pool = getDBConnection();
   const client = await pool.connect();
   try {
