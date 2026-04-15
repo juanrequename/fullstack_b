@@ -26,7 +26,7 @@ export async function getReport(client: PoolClient) {
 
 export async function searchOrders(client: PoolClient, filters: OrderSearchFilters): Promise<Order[]> {
   const conditions: string[] = [];
-  const params: (string | number)[] = [];
+  const params: (string | number | string[])[] = [];
   let paramIndex = 1;
 
   if (filters.model) {
@@ -42,16 +42,20 @@ export async function searchOrders(client: PoolClient, filters: OrderSearchFilte
   if (filters.tags) {
     const tagList = String(filters.tags)
       .split(",")
-      .map(t => t.trim());
-    conditions.push(
-      `EXISTS (
-        SELECT 1 FROM products_tags pt2
-        JOIN tags t2 ON t2.tag_id = pt2.tag_id
-        WHERE pt2.product_id = p.product_id
-        AND t2.name = ANY($${paramIndex++}::text[])
-      )`
-    );
-    params.push(tagList as unknown as string);
+      .map(tag => tag.trim())
+      .filter(Boolean);
+
+    if (tagList.length > 0) {
+      conditions.push(
+        `EXISTS (
+          SELECT 1 FROM products_tags pt2
+          JOIN tags t2 ON t2.tag_id = pt2.tag_id
+          WHERE pt2.product_id = p.product_id
+          AND t2.name = ANY($${paramIndex++}::text[])
+        )`
+      );
+      params.push(tagList);
+    }
   }
 
   if (filters.startDate) {
