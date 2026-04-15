@@ -10,7 +10,7 @@ export default class CustomError extends Error {
     public code: ValueOf<typeof RESPONSE_CODES>,
     public message: string
   ) {
-    super();
+    super(message);
   }
 }
 
