@@ -9,4 +9,5 @@ export const environment = {
   dbName: process.env.DB_NAME ?? "backend",
   dbSsl: process.env.DB_SSL === "true",
   albumsApiUrl: process.env.ALBUMS_API_URL ?? "https://jsonplaceholder.typicode.com/albums",
+  albumsApiTimeoutMs: Number(process.env.ALBUMS_API_TIMEOUT_MS ?? 5000),
 };

@@ -10,8 +10,13 @@ interface Album {
 }
 
 async function validateDescription(description: string): Promise<boolean> {
+  const controller = new AbortController();
+  const timeoutMs = environment.albumsApiTimeoutMs;
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
   try {
-    const response = await fetch(environment.albumsApiUrl);
+    const response = await fetch(environment.albumsApiUrl, {
+      signal: controller.signal,
+    });
     if (!response.ok) {
       throw new Error("Failed to fetch albums");
     }
@@ -20,6 +25,8 @@ async function validateDescription(description: string): Promise<boolean> {
   } catch (error) {
     logger.error({ err: error }, "Error validating description");
     return false;
+  } finally {
+    clearTimeout(timeoutId);
   }
 }
 
