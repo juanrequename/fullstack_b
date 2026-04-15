@@ -11,7 +11,7 @@ export interface Order {
 export interface OrderSearchFilters {
   model?: string;
   description?: string;
-  tags?: string | string[];
+  tags?: string;
   startDate?: string;
   endDate?: string;
   gears?: string;

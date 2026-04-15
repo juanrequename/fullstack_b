@@ -44,7 +44,7 @@ export async function searchOrders(
   }
 
   if (filters.tags) {
-    const tagList = String(filters.tags)
+    const tagList = filters.tags
       .split(",")
       .map(tag => tag.trim())
       .filter(Boolean);
