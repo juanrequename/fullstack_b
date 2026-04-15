@@ -19,29 +19,30 @@ CREATE TABLE products (
 --Crear tabla tags
 CREATE TABLE tags (
     tag_id SERIAL PRIMARY KEY,
-    name VARCHAR(100) NOT NULL,
+    name VARCHAR(100) NOT NULL UNIQUE,
     creation_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 --Create tabla product_tags
 CREATE TABLE products_tags (
     products_tags_id SERIAL PRIMARY KEY,
-    tag_id INT REFERENCES tags (tag_id),
-    product_id INT REFERENCES products (product_id),
-    creation_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    tag_id INT NOT NULL REFERENCES tags (tag_id),
+    product_id INT NOT NULL REFERENCES products (product_id),
+    creation_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE (product_id, tag_id)
 );
 
 -- Crear tabla states
 CREATE TABLE states (
     state_id SERIAL PRIMARY KEY,
-    state_name VARCHAR(50) NOT NULL,
+    state_name VARCHAR(50) NOT NULL UNIQUE,
     description TEXT
 );
 
 -- Crear tabla orders
 CREATE TABLE orders (
     order_id SERIAL PRIMARY KEY,
-    user_id INT REFERENCES users (user_id),
+    user_id INT NOT NULL REFERENCES users (user_id),
     product_id INT REFERENCES products (product_id),
     order_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -49,8 +50,8 @@ CREATE TABLE orders (
 -- Crear tabla state_history
 CREATE TABLE state_history (
     history_id SERIAL PRIMARY KEY,
-    order_id INT REFERENCES orders (order_id),
-    state_id INT REFERENCES states (state_id),
+    order_id INT NOT NULL REFERENCES orders (order_id),
+    state_id INT NOT NULL REFERENCES states (state_id),
     change_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     current_state BOOLEAN DEFAULT FALSE
 );
