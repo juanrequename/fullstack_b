@@ -61,6 +61,22 @@ describe("POST /api/products", () => {
     );
   });
 
+  it("should return 503 when albums API fails", async () => {
+    req.body = { model: "GLA", description: "any", year: "2021", gears: "6" };
+    mockFetch.mockResolvedValueOnce({
+      ok: false,
+      status: 502,
+      json: async () => [],
+    });
+
+    await handler(req as NextApiRequest, res as NextApiResponse);
+
+    expect(res.status).toHaveBeenCalledWith(503);
+    expect(res.json).toHaveBeenCalledWith(
+      expect.objectContaining({ error: expect.stringContaining("Unable to validate description") })
+    );
+  });
+
   it("should create product and return 201 when description is valid", async () => {
     req.body = {
       model: "GLA",

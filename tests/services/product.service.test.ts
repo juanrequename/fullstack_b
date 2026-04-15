@@ -62,6 +62,19 @@ describe("createProduct", () => {
     });
   });
 
+  it("throws SERVICE_UNAVAILABLE when albums API fails", async () => {
+    mockFetch.mockResolvedValue({
+      ok: false,
+      status: 500,
+      json: async () => [],
+    });
+
+    await expect(createProduct(input)).rejects.toMatchObject({
+      code: RESPONSE_CODES.SERVICE_UNAVAILABLE,
+      message: expect.stringContaining("Unable to validate description"),
+    });
+  });
+
   it("creates product, links existing and new tags, and commits", async () => {
     mockFetch.mockResolvedValue({
       ok: true,

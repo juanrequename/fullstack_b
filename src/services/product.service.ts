@@ -17,13 +17,16 @@ async function validateDescription(description: string): Promise<boolean> {
       signal: controller.signal,
     });
     if (!response.ok) {
-      throw new Error("Failed to fetch albums");
+      throw new Error(`Failed to fetch albums: ${response.status}`);
     }
     const albums: Album[] = await response.json();
     return albums.some(album => album.title === description);
   } catch (error) {
     logger.error({ err: error }, "Error validating description");
-    return false;
+    throw new CustomError(
+      RESPONSE_CODES.SERVICE_UNAVAILABLE,
+      "Unable to validate description due to upstream dependency failure"
+    );
   } finally {
     clearTimeout(timeoutId);
   }
