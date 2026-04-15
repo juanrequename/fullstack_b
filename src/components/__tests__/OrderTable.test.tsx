@@ -240,6 +240,62 @@ describe('OrderTable', () => {
     });
   });
 
+  it('disables Cancel button for Delivered orders', async () => {
+    renderComponent();
+    await waitFor(() => screen.getByText('Jane Smith'));
+
+    const cancelButtons = screen.getAllByRole('button', { name: 'Cancel' });
+    // order 1 is Pending — enabled; order 2 is Delivered — disabled
+    expect(cancelButtons[0]).not.toBeDisabled();
+    expect(cancelButtons[1]).toBeDisabled();
+  });
+
+  it('disables Cancel button for Cancelled orders', async () => {
+    mockedAxios.get.mockResolvedValue({
+      data: [
+        { order_id: 3, user: 'Bob', model: 'AMG', tags: [], order_date: '2025-01-01T00:00:00.000Z', current_status_date: '2025-01-02T00:00:00.000Z', status: 'Cancelled' },
+      ],
+    });
+    renderComponent();
+    await waitFor(() => screen.getByText('Bob'));
+    expect(screen.getByRole('button', { name: 'Cancel' })).toBeDisabled();
+  });
+
+  it('enables Cancel button for Pending orders', async () => {
+    mockedAxios.get.mockResolvedValue({
+      data: [
+        { order_id: 4, user: 'Alice', model: 'GLC', tags: [], order_date: '2025-02-01T00:00:00.000Z', current_status_date: '2025-02-02T00:00:00.000Z', status: 'Pending' },
+      ],
+    });
+    renderComponent();
+    await waitFor(() => screen.getByText('Alice'));
+    expect(screen.getByRole('button', { name: 'Cancel' })).not.toBeDisabled();
+  });
+
+  it('enables Cancel button for Shipped orders', async () => {
+    mockedAxios.get.mockResolvedValue({
+      data: [
+        { order_id: 5, user: 'Eve', model: 'GLE', tags: [], order_date: '2025-03-01T00:00:00.000Z', current_status_date: '2025-03-02T00:00:00.000Z', status: 'Shipped' },
+      ],
+    });
+    renderComponent();
+    await waitFor(() => screen.getByText('Eve'));
+    expect(screen.getByRole('button', { name: 'Cancel' })).not.toBeDisabled();
+  });
+
+  it('calls PATCH cancel when Cancel button is clicked', async () => {
+    mockedAxios.patch.mockResolvedValue({ data: { order_id: 1, new_status: 'Cancelled' } });
+    renderComponent();
+    await waitFor(() => screen.getByText('John Doe'));
+
+    const cancelButtons = screen.getAllByRole('button', { name: 'Cancel' });
+    fireEvent.click(cancelButtons[0]);
+
+    await waitFor(() => {
+      expect(mockedAxios.patch).toHaveBeenCalledWith('/api/orders/1/cancel');
+    });
+  });
+
   it('renders orders with empty tags array', async () => {
     mockedAxios.get.mockResolvedValue({
       data: [

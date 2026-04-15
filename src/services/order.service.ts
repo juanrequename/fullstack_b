@@ -42,6 +42,48 @@ export async function searchOrders(
   }
 }
 
+export async function cancelOrder(orderId: number) {
+  const pool = getDBConnection();
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+
+    const currentState = await orderRepo.getCurrentState(client, orderId);
+
+    if (!currentState) {
+      throw new CustomError(RESPONSE_CODES.NOT_FOUND, "Order not found or has no current state");
+    }
+
+    if (currentState.state_name === "Cancelled") {
+      throw new CustomError(RESPONSE_CODES.BAD_REQUEST, "Order is already cancelled");
+    }
+
+    if (currentState.state_name === "Delivered") {
+      throw new CustomError(RESPONSE_CODES.BAD_REQUEST, "Cannot cancel a delivered order");
+    }
+
+    const cancelledStateId = await orderRepo.getStateIdByName(client, "Cancelled");
+
+    if (cancelledStateId === null) {
+      throw new CustomError(
+        RESPONSE_CODES.INTERNAL_SERVER_ERROR,
+        "State 'Cancelled' not found in database"
+      );
+    }
+
+    await orderRepo.deactivateCurrentState(client, orderId);
+    await orderRepo.insertStateHistory(client, orderId, cancelledStateId);
+
+    await client.query("COMMIT");
+    return { order_id: orderId, new_status: "Cancelled" };
+  } catch (error) {
+    await client.query("ROLLBACK");
+    throw error;
+  } finally {
+    client.release();
+  }
+}
+
 export async function advanceOrderStatus(orderId: number) {
   const pool = getDBConnection();
   const client = await pool.connect();

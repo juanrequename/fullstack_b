@@ -39,6 +39,11 @@ export const OrderTable = () => {
     { onSuccess: () => queryClient.invalidateQueries('orders') }
   );
 
+  const cancelMutation = useMutation(
+    (orderId: number) => axios.patch(`/api/orders/${orderId}/cancel`),
+    { onSuccess: () => queryClient.invalidateQueries('orders') }
+  );
+
   const addProductMutation = useMutation(
     (data: { model: string; description: string; year: string; gears: string; tags: string[] }) =>
       axios.post('/api/products', data),
@@ -47,6 +52,10 @@ export const OrderTable = () => {
 
   const handleNextStep = (orderId: number) => {
     nextStepMutation.mutate(orderId);
+  };
+
+  const handleCancel = (orderId: number) => {
+    cancelMutation.mutate(orderId);
   };
 
   const [open, setOpen] = useState(false);
@@ -251,7 +260,9 @@ export const OrderTable = () => {
                 <TableCell>
                   <Button
                     variant="contained"
-                    onClick={() => console.log('Cancel', order.order_id)}
+                    color="primary"
+                    disabled={order.status === 'Delivered' || order.status === 'Cancelled'}
+                    onClick={() => handleCancel(order.order_id)}
                   >
                     Cancel
                   </Button>
