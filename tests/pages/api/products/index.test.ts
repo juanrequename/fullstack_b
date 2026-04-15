@@ -94,7 +94,7 @@ describe("POST /api/products", () => {
     mockQuery
       .mockResolvedValueOnce(undefined) // BEGIN
       .mockResolvedValueOnce({ rows: [{ product_id: 99 }] }) // INSERT product
-      .mockResolvedValueOnce({ rows: [{ tag_id: 1 }] }) // SELECT tag
+      .mockResolvedValueOnce({ rows: [{ tag_id: 1 }] }) // upsert tags
       .mockResolvedValueOnce({ rows: [] }) // INSERT products_tags
       .mockResolvedValueOnce(undefined); // COMMIT
 
@@ -175,8 +175,7 @@ describe("POST /api/products", () => {
     mockQuery
       .mockResolvedValueOnce(undefined) // BEGIN
       .mockResolvedValueOnce({ rows: [{ product_id: 77 }] }) // INSERT product
-      .mockResolvedValueOnce({ rows: [] }) // SELECT tag - not found
-      .mockResolvedValueOnce({ rows: [{ tag_id: 10 }] }) // INSERT new tag
+      .mockResolvedValueOnce({ rows: [{ tag_id: 10 }] }) // upsert tags
       .mockResolvedValueOnce({ rows: [] }) // INSERT products_tags
       .mockResolvedValueOnce(undefined); // COMMIT
 

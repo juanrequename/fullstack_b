@@ -55,13 +55,8 @@ export async function createProduct(input: CreateProductInput): Promise<CreatePr
     );
 
     if (Array.isArray(input.tags) && input.tags.length > 0) {
-      for (const tagName of input.tags) {
-        let tagId = await productRepo.findTagByName(client, tagName);
-        if (tagId === null) {
-          tagId = await productRepo.createTag(client, tagName);
-        }
-        await productRepo.linkProductTag(client, productId, tagId);
-      }
+      const tagIds = await productRepo.upsertTags(client, input.tags);
+      await productRepo.linkProductTags(client, productId, tagIds);
     }
 
     await client.query("COMMIT");

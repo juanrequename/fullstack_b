@@ -14,19 +14,26 @@ export async function createProduct(
   return result.rows[0].product_id;
 }
 
-export async function findTagByName(client: PoolClient, name: string): Promise<number | null> {
-  const result = await client.query("SELECT tag_id FROM tags WHERE name = $1", [name]);
-  return result.rows.length > 0 ? result.rows[0].tag_id : null;
+export async function upsertTags(client: PoolClient, names: string[]): Promise<number[]> {
+  const result = await client.query(
+    `INSERT INTO tags (name)
+     SELECT DISTINCT UNNEST($1::text[])
+     ON CONFLICT (name) DO UPDATE SET name = EXCLUDED.name
+     RETURNING tag_id`,
+    [names]
+  );
+  return result.rows.map((row: { tag_id: number }) => row.tag_id);
 }
 
-export async function createTag(client: PoolClient, name: string): Promise<number> {
-  const result = await client.query("INSERT INTO tags (name) VALUES ($1) RETURNING tag_id", [name]);
-  return result.rows[0].tag_id;
-}
-
-export async function linkProductTag(client: PoolClient, productId: number, tagId: number) {
-  await client.query("INSERT INTO products_tags (product_id, tag_id) VALUES ($1, $2)", [
-    productId,
-    tagId,
-  ]);
+export async function linkProductTags(
+  client: PoolClient,
+  productId: number,
+  tagIds: number[]
+): Promise<void> {
+  await client.query(
+    `INSERT INTO products_tags (product_id, tag_id)
+     SELECT $1, UNNEST($2::int[])
+     ON CONFLICT (product_id, tag_id) DO NOTHING`,
+    [productId, tagIds]
+  );
 }

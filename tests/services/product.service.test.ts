@@ -84,18 +84,16 @@ describe("createProduct", () => {
     const createProductMock = productRepo.createProduct as jest.MockedFunction<
       typeof productRepo.createProduct
     >;
-    const findTagMock = productRepo.findTagByName as jest.MockedFunction<
-      typeof productRepo.findTagByName
+    const upsertTagsMock = productRepo.upsertTags as jest.MockedFunction<
+      typeof productRepo.upsertTags
     >;
-    const createTagMock = productRepo.createTag as jest.MockedFunction<typeof productRepo.createTag>;
-    const linkMock = productRepo.linkProductTag as jest.MockedFunction<
-      typeof productRepo.linkProductTag
+    const linkProductTagsMock = productRepo.linkProductTags as jest.MockedFunction<
+      typeof productRepo.linkProductTags
     >;
 
     createProductMock.mockResolvedValue(42);
-    findTagMock.mockResolvedValueOnce(10).mockResolvedValueOnce(null);
-    createTagMock.mockResolvedValue(99);
-    linkMock.mockResolvedValue(undefined);
+    upsertTagsMock.mockResolvedValue([10, 99]);
+    linkProductTagsMock.mockResolvedValue(undefined);
 
     const result = await createProduct(input);
 
@@ -111,10 +109,8 @@ describe("createProduct", () => {
       Number(input.year),
       Number(input.gears)
     );
-    expect(findTagMock).toHaveBeenCalledTimes(2);
-    expect(createTagMock).toHaveBeenCalledWith(mockClient, "NewTag");
-    expect(linkMock).toHaveBeenNthCalledWith(1, mockClient, 42, 10);
-    expect(linkMock).toHaveBeenNthCalledWith(2, mockClient, 42, 99);
+    expect(upsertTagsMock).toHaveBeenCalledWith(mockClient, input.tags);
+    expect(linkProductTagsMock).toHaveBeenCalledWith(mockClient, 42, [10, 99]);
     expect(mockQuery).toHaveBeenNthCalledWith(1, "BEGIN");
     expect(mockQuery).toHaveBeenNthCalledWith(2, "COMMIT");
     expect(mockRelease).toHaveBeenCalled();
