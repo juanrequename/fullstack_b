@@ -22,14 +22,15 @@ describe("searchOrders repository", () => {
     const expectedRows = [{ order_id: 1 }];
     mockClient.query.mockResolvedValueOnce({ rows: expectedRows });
 
-    const result = await searchOrders(mockClient, {});
+    const result = await searchOrders(mockClient, {}, { page: 1, limit: 50 });
 
     const [query, params] = mockClient.query.mock.calls[0];
     expect(query).toContain("FROM orders");
     expect(query).toContain("ORDER BY o.order_id");
     expect(query).toContain(ORDERS_BASE_QUERY.trim().split("\n")[1].trim());
     expect(query).toContain(ORDERS_GROUP_ORDER.trim().split("\n")[1].trim());
-    expect(params).toEqual([]);
+    expect(query).toContain("LIMIT $1 OFFSET $2");
+    expect(params).toEqual([50, 0]);
     expect(result).toBe(expectedRows);
   });
 
@@ -43,7 +44,7 @@ describe("searchOrders repository", () => {
       gears: "6",
     };
 
-    await searchOrders(mockClient, filters);
+    await searchOrders(mockClient, filters, { page: 2, limit: 10 });
 
     const [query, params] = mockClient.query.mock.calls[0];
 
@@ -53,6 +54,7 @@ describe("searchOrders repository", () => {
     expect(query).toContain("o.order_date >= $4");
     expect(query).toContain("o.order_date < $5");
     expect(query).toContain("p.gears = $6");
+    expect(query).toContain("LIMIT $7 OFFSET $8");
 
     expect(params).toEqual([
       "GLA",
@@ -61,15 +63,18 @@ describe("searchOrders repository", () => {
       "2025-01-01",
       "2025-12-31",
       6,
+      10,
+      10,
     ]);
   });
 
   it("omits the tags predicate when the provided list is empty", async () => {
-    await searchOrders(mockClient, { tags: ", , " });
+    await searchOrders(mockClient, { tags: ", , " }, { page: 1, limit: 50 });
 
     const [query, params] = mockClient.query.mock.calls[0];
 
     expect(query).not.toMatch(/ANY\(\$/);
-    expect(params).toEqual([]);
+    expect(query).toContain("LIMIT $1 OFFSET $2");
+    expect(params).toEqual([50, 0]);
   });
 });

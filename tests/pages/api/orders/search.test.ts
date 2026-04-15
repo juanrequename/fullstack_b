@@ -49,6 +49,36 @@ describe("GET /api/orders/search", () => {
     expect(afterGroupBy).not.toMatch(/\bWHERE\b.*\$/);
   });
 
+  it("should apply default pagination when no page/limit provided", async () => {
+    mockQuery.mockResolvedValueOnce({ rows: [] });
+
+    await handler(req as NextApiRequest, res as NextApiResponse);
+
+    const [queryStr, params] = mockQuery.mock.calls[0];
+    expect(queryStr).toContain("LIMIT $1 OFFSET $2");
+    expect(params).toEqual([50, 0]);
+  });
+
+  it("should apply custom pagination parameters", async () => {
+    req.query = { page: "3", limit: "10" };
+    mockQuery.mockResolvedValueOnce({ rows: [] });
+
+    await handler(req as NextApiRequest, res as NextApiResponse);
+
+    const [queryStr, params] = mockQuery.mock.calls[0];
+    expect(queryStr).toContain("LIMIT $1 OFFSET $2");
+    expect(params).toEqual([10, 20]);
+  });
+
+  it("should return 400 for invalid pagination parameters", async () => {
+    req.query = { limit: "200" };
+
+    await handler(req as NextApiRequest, res as NextApiResponse);
+
+    expect(res.status).toHaveBeenCalledWith(400);
+    expect(mockQuery).not.toHaveBeenCalled();
+  });
+
   it("should apply model filter with exact match", async () => {
     req.query = { model: "GLA" };
     mockQuery.mockResolvedValueOnce({ rows: [] });
@@ -57,7 +87,8 @@ describe("GET /api/orders/search", () => {
 
     const [queryStr, params] = mockQuery.mock.calls[0];
     expect(queryStr).toContain("p.model = $1");
-    expect(params).toEqual(["GLA"]);
+    expect(queryStr).toContain("LIMIT $2 OFFSET $3");
+    expect(params).toEqual(["GLA", 50, 0]);
   });
 
   it("should apply description filter with ILIKE", async () => {
@@ -68,7 +99,7 @@ describe("GET /api/orders/search", () => {
 
     const [queryStr, params] = mockQuery.mock.calls[0];
     expect(queryStr).toContain("ILIKE");
-    expect(params).toEqual(["%sedan%"]);
+    expect(params).toEqual(["%sedan%", 50, 0]);
   });
 
   it("should apply tags filter with ANY", async () => {
@@ -79,7 +110,7 @@ describe("GET /api/orders/search", () => {
 
     const [queryStr, params] = mockQuery.mock.calls[0];
     expect(queryStr).toContain("ANY($1::text[])");
-    expect(params).toEqual([["SUV", "Petrol"]]);
+    expect(params).toEqual([["SUV", "Petrol"], 50, 0]);
   });
 
   it("should apply date range and gears filters", async () => {
@@ -92,7 +123,8 @@ describe("GET /api/orders/search", () => {
     expect(queryStr).toContain("o.order_date >= $1");
     expect(queryStr).toContain("o.order_date < $2");
     expect(queryStr).toContain("p.gears = $3");
-    expect(params).toEqual(["2025-01-01", "2025-12-31", 6]);
+    expect(queryStr).toContain("LIMIT $4 OFFSET $5");
+    expect(params).toEqual(["2025-01-01", "2025-12-31", 6, 50, 0]);
   });
 
   it("should combine multiple filters", async () => {
@@ -104,7 +136,8 @@ describe("GET /api/orders/search", () => {
     const [queryStr, params] = mockQuery.mock.calls[0];
     expect(queryStr).toContain("p.model = $1");
     expect(queryStr).toContain("p.gears = $2");
-    expect(params).toEqual(["GLA", 6]);
+    expect(queryStr).toContain("LIMIT $3 OFFSET $4");
+    expect(params).toEqual(["GLA", 6, 50, 0]);
   });
 
   it("should return 500 on database error", async () => {

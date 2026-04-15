@@ -24,7 +24,11 @@ export async function getReport(client: PoolClient) {
   return result.rows;
 }
 
-export async function searchOrders(client: PoolClient, filters: OrderSearchFilters): Promise<Order[]> {
+export async function searchOrders(
+  client: PoolClient,
+  filters: OrderSearchFilters,
+  pagination: { page: number; limit: number }
+): Promise<Order[]> {
   const conditions: string[] = [];
   const params: (string | number | string[])[] = [];
   let paramIndex = 1;
@@ -75,8 +79,12 @@ export async function searchOrders(client: PoolClient, filters: OrderSearchFilte
 
   const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
 
+  const offset = (pagination.page - 1) * pagination.limit;
+  const limitClause = ` LIMIT $${paramIndex} OFFSET $${paramIndex + 1}`;
+  params.push(pagination.limit, offset);
+
   const query = `${ORDERS_BASE_QUERY}
-    ${whereClause}${ORDERS_GROUP_ORDER}`;
+    ${whereClause}${ORDERS_GROUP_ORDER}${limitClause}`;
 
   const result = await client.query(query, params);
   return result.rows;

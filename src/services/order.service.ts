@@ -28,11 +28,14 @@ export async function getReport() {
   }
 }
 
-export async function searchOrders(filters: OrderSearchFilters): Promise<Order[]> {
+export async function searchOrders(
+  filters: OrderSearchFilters,
+  pagination: { page: number; limit: number }
+): Promise<Order[]> {
   const pool = getDBConnection();
   const client = await pool.connect();
   try {
-    return await orderRepo.searchOrders(client, filters);
+    return await orderRepo.searchOrders(client, filters, pagination);
   } finally {
     client.release();
   }

@@ -21,6 +21,8 @@ export const searchOrdersSchema = z.object({
     .regex(/^\d{4}-\d{2}-\d{2}$/, "endDate must be in YYYY-MM-DD format")
     .optional(),
   gears: z.string().regex(/^\d+$/, "gears must be a positive integer").optional(),
+  page: z.coerce.number().int().min(1).default(1),
+  limit: z.coerce.number().int().min(1).max(100).default(50),
 });
 
 export const orderIdSchema = z.object({

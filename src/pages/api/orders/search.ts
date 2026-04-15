@@ -50,6 +50,21 @@ import { NextApiRequest, NextApiResponse } from "next";
  *           type: integer
  *         description: Exact gear count match
  *         example: 6
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           default: 1
+ *         description: Page number (1-based)
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           maximum: 100
+ *           default: 50
+ *         description: Number of orders per page
  *     responses:
  *       200:
  *         description: Filtered list of orders
@@ -96,17 +111,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       .json({ error: parsed.error.issues.map(e => e.message).join(", ") });
   }
 
-  const { model, description, tags, startDate, endDate, gears } = parsed.data;
+  const { model, description, tags, startDate, endDate, gears, page, limit } = parsed.data;
 
   try {
-    const result = await orderService.searchOrders({
-      model,
-      description,
-      tags,
-      startDate,
-      endDate,
-      gears,
-    });
+    const result = await orderService.searchOrders(
+      { model, description, tags, startDate, endDate, gears },
+      { page, limit }
+    );
     res.status(RESPONSE_CODES.OK).json(result);
   } catch (error) {
     logger.error({ err: error }, "Error searching orders");
